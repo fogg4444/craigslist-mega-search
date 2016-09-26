@@ -1,9 +1,8 @@
-'use  strict'; // V8 only can only use block scopes in strict mode so far.
-
+'use  strict'; // V8 only can only use block scopes in strict mode
 
 var cheerio = require('cheerio');
 var request = require('request');
-
+var mustache = require('mustache');
 
 console.log('Searching...')
 
@@ -45,66 +44,72 @@ let parseCitiesHtmlToList = (html) => {
 
 let getSearchData = (cities, query) => {
   return new Promise((resolve, reject) => {
-
     let cityCount = cities.length
-    let citysComplete = 0;
-
+    let citiesComplete = 0;
     let hrefList = []
 
-    console.log(cities)
-
-    for( var city in cities ) {
-
-      let thisCity = cities[city]
+    var i = 0, howManyTimes = cityCount, requestDelay = 100;
+    
+    function f() {
+      let thisCity = cities[i]
       let formattedQuery = 'https:' + thisCity + query;
+      
+      // code goes here...
+      let options = {
+        timeout: 10000
+      }
+      request(formattedQuery, options, (error, response, body) => {
+        if (error) {
+          console.log('Error: ' + thisCity + error + citiesComplete + ' / ' + cityCount);
+          citiesComplete ++
+        } else if (!error && response.statusCode == 200) {
+          let $ = cheerio.load(body)
+          let searhResultsPage = cheerio.load( $('#sortable-results').html() )
+          let resultsDiv = cheerio.load( searhResultsPage('.rows').html() )
+          let resultsALink = resultsDiv('a')
 
-      {
-        // code goes here...
-        let options = {
-          timeout: 10 * 1000
+          for( let i in resultsALink ) {
+            let thisElement = resultsALink[i]
+            if (thisElement.attribs) {
+              if (thisElement.attribs.href) {
+                let href = thisElement.attribs.href
+                if (href[0] !== 'h') {
+                  href = href.slice(1)
+                  let completeLink = 'https:' + thisCity + href
+                  // console.log(completeLink)
+                  console.log(' ============ Hit! ============')
+                  hrefList.push(completeLink)
+                }
+              }
+            }
+          }
+
+          let beautyCityName = thisCity.slice(2).slice(0, -16)
+          console.log(beautyCityName + ' complete' + ' ' + citiesComplete + ' / ' + cityCount)
+          citiesComplete ++
+        } else {
+          console.log('Unknown condition - ' + citiesComplete + ' / ' + cityCount)
+          citiesComplete++
         }
-        request(formattedQuery, options, (error, response, body) => {
+        if (citiesComplete === cityCount) {
+          resolve(hrefList)
+        }
+      })
 
-          if (error) {
-            citysComplete ++
-            console.log('Error: ' + thisCity + error + citysComplete + ' / ' + cityCount);
-          }
-
-          if (!error && response.statusCode == 200) {
-
-            // let $ = cheerio.load(body)
-            // let searhResultsPage = cheerio.load( $('#sortable-results').html() )
-            // let resultsDiv = cheerio.load( searhResultsPage('.rows').html() )
-            // let resultsALink = resultsDiv('a')
-
-
-
-            // for( let i in resultsALink ) {
-            //   let thisElement = resultsALink[i]
-            //   if (thisElement.attribs) {
-            //     if (thisElement.attribs.href) {
-            //       let href = thisElement.attribs.href
-            //       if (href[0] !== 'h') {
-            //         href = href.slice(1)
-            //         let completeLink = 'https:' + thisCity + href
-            //         // console.log(completeLink)
-            //         console.log('Hit!')
-            //         hrefList.push(completeLink)
-            //       }
-            //     }
-            //   }
-            // }
-
-            citysComplete ++
-            let beautyCityName = thisCity.slice(2).slice(0, -16)
-            console.log(beautyCityName + ' complete' + ' ' + citysComplete + ' / ' + cityCount)
-          }
-        })
-      } 
+      i++;
+      if( i <= howManyTimes ){
+        setTimeout( f, requestDelay );
+      }
     }
+    f();
   })
 }
 
+let generateHtmlPage = (hrefList) => {
+  return new Promise((resolve, reject) => {
+    
+  })
+}
 
 getCraigsCityHtml()
 .then((res) => {
@@ -117,20 +122,6 @@ getCraigsCityHtml()
 .then((res) => {
   console.log('Final output', res)
 })
-
-// let sfbay = '//sfbay.craigslist.org/';
-
-// let query = 'search/cta?sort=rel&auto_make_model=land+cruiser&min_auto_year=1990&max_auto_year=1997&auto_transmission=1';
-// let query2 = 'search/cta?auto_make_model=land+cruiser&min_auto_year=1990&max_auto_year=1997'
-
-// getSearchData(sfbay, query)
-// .then((res) => {
-//   console.log(res)
-// })
-// .catch((err) => {
-//   console.log(err)
-// })
-
 
 
 

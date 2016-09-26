@@ -2,9 +2,19 @@
 
 var cheerio = require('cheerio');
 var request = require('request');
-var mustache = require('mustache');
+var Mustache = require('mustache');
+var fs = require('fs');
 
 console.log('Searching...')
+
+/////////////////////////////////
+/////////////////////////////////
+
+let htmlOutputFile = './html_output.html'
+let searchQuery = 'search/cta?sort=rel&auto_make_model=land+cruiser&min_auto_year=1990&max_auto_year=1997&auto_transmission=1';
+
+/////////////////////////////////
+/////////////////////////////////
 
 let getCraigsCityHtml = () => {
   return new Promise(function(resolve, reject) {
@@ -41,6 +51,21 @@ let parseCitiesHtmlToList = (html) => {
   })
 }
 
+let getThumbnailImage = (completeLink) => {
+  return new Promise((resolve, reject) => {
+    request(completeLink, (err, res, body) => {
+      if (!err && res.statusCode === 200) {
+
+        let post = cheerio.load(body)
+        let img = post('img')
+        console.log(img[0].attribs.src)
+        if (img) {
+          resolve( img[0].attribs.src )
+        }
+      }
+    })
+  })
+}
 
 let getSearchData = (cities, query) => {
   return new Promise((resolve, reject) => {
@@ -77,15 +102,24 @@ let getSearchData = (cities, query) => {
                   href = href.slice(1)
                   let completeLink = 'https:' + thisCity + href
                   // console.log(completeLink)
+                  
                   console.log(' ============ Hit! ============')
-                  hrefList.push(completeLink)
+                  
+                  getThumbnailImage(completeLink)
+                  .then((res) => {
+                    hrefList.push({
+                      completeLink: completeLink,
+                      image: res
+                    })
+                  })
+                  
                 }
               }
             }
           }
 
           let beautyCityName = thisCity.slice(2).slice(0, -16)
-          console.log(beautyCityName + ' complete' + ' ' + citiesComplete + ' / ' + cityCount)
+          // console.log(beautyCityName + ' complete' + ' ' + citiesComplete + ' / ' + cityCount)
           citiesComplete ++
         } else {
           console.log('Unknown condition - ' + citiesComplete + ' / ' + cityCount)
@@ -107,7 +141,25 @@ let getSearchData = (cities, query) => {
 
 let generateHtmlPage = (hrefList) => {
   return new Promise((resolve, reject) => {
+    console.log('generateHtmlPage from: ', hrefList)
+    let output = ''
+
+    for( var i in hrefList) {
+      let thisHref = hrefList[i]
+      let view = {
+        url: thisHref.completeLink,
+        image: thisHref.image
+      };
+      console.log('VIEW: ', view)
+      output = output + Mustache.render("<a href={{url}}><img src={{image}} width='200'></img></a>", view);
+      console.log(output)
+    }
+
+
+    fs.writeFileSync(htmlOutputFile, output)
     
+
+    resolve('done')
   })
 }
 
@@ -116,8 +168,13 @@ getCraigsCityHtml()
   return parseCitiesHtmlToList(res)
 })
 .then(function(res) {
-  let query = 'search/cta?sort=rel&auto_make_model=land+cruiser&min_auto_year=1990&max_auto_year=1997&auto_transmission=1';
-  return getSearchData(res, query)
+  return getSearchData(res, searchQuery)
+  // let hrefArrayMock = /['http://www.brianfogg.com', 'http://www.google.com']
+  // return hrefArrayMock
+})
+.then((res) => {
+  console.log(res)
+  return generateHtmlPage(res)
 })
 .then((res) => {
   console.log('Final output', res)

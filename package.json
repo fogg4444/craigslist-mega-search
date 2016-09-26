@@ -1,0 +1,17 @@
+{
+  "name": "land_cruiser_find",
+  "version": "1.0.0",
+  "description": "",
+  "main": "search_nationwide.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^0.22.0",
+    "http": "0.0.0",
+    "osmosis": "^1.1.0",
+    "request": "^2.75.0"
+  }
+}

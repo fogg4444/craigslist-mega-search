@@ -10,8 +10,8 @@ console.log('Searching...')
 /////////////////////////////////
 /////////////////////////////////
 
-let htmlOutputFile = './html_output.html'
 let searchQuery = 'search/cta?sort=rel&auto_make_model=land+cruiser&min_auto_year=1990&max_auto_year=1997&auto_transmission=1';
+let htmlOutputFile = './html_output.html'
 
 /////////////////////////////////
 /////////////////////////////////
@@ -58,9 +58,11 @@ let getThumbnailImage = (completeLink) => {
 
         let post = cheerio.load(body)
         let img = post('img')
-        console.log(img[0].attribs.src)
-        if (img) {
+        // console.log(img[0].attribs.src)
+        if (img && img[0].attribs && img[0].attribs.src) {
           resolve( img[0].attribs.src )
+        } else {
+          resolve('no image')
         }
       }
     })
@@ -119,7 +121,7 @@ let getSearchData = (cities, query) => {
           }
 
           let beautyCityName = thisCity.slice(2).slice(0, -16)
-          // console.log(beautyCityName + ' complete' + ' ' + citiesComplete + ' / ' + cityCount)
+          console.log(beautyCityName + ' complete' + ' ' + citiesComplete + ' / ' + cityCount)
           citiesComplete ++
         } else {
           console.log('Unknown condition - ' + citiesComplete + ' / ' + cityCount)
@@ -141,7 +143,7 @@ let getSearchData = (cities, query) => {
 
 let generateHtmlPage = (hrefList) => {
   return new Promise((resolve, reject) => {
-    console.log('generateHtmlPage from: ', hrefList)
+    // console.log('generateHtmlPage from: ', hrefList)
     let output = ''
 
     for( var i in hrefList) {
@@ -150,15 +152,13 @@ let generateHtmlPage = (hrefList) => {
         url: thisHref.completeLink,
         image: thisHref.image
       };
-      console.log('VIEW: ', view)
+      // console.log('VIEW: ', view)
       output = output + Mustache.render("<a href={{url}}><img src={{image}} width='200'></img></a>", view);
-      console.log(output)
+      // console.log(output)
     }
-
 
     fs.writeFileSync(htmlOutputFile, output)
     
-
     resolve('done')
   })
 }
@@ -177,7 +177,7 @@ getCraigsCityHtml()
   return generateHtmlPage(res)
 })
 .then((res) => {
-  console.log('Final output', res)
+  console.log('================= Done! ====================')
 })
 
 

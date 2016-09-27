@@ -10,7 +10,14 @@ console.log('Searching...')
 /////////////////////////////////
 /////////////////////////////////
 
-let searchQuery = 'search/cta?sort=rel&auto_make_model=land+cruiser&min_auto_year=1990&max_auto_year=1997&auto_transmission=1';
+// drum kits
+// let searchQuery = 'search/sss?query=ludwig+vintage+kit&sort=rel&hasPic=1&min_price=1000&max_price=2000';
+
+// guitars
+let searchQuery = 'search/sss?query=rickenbacker+12+string&sort=rel&hasPic=1&min_price=1000&max_price=4000';
+
+// land cruiser
+// let searchQuery = 'search/cta?sort=rel&auto_make_model=land+cruiser&min_auto_year=1990&max_auto_year=1997&auto_transmission=1';
 let htmlOutputFile = './html_output.html'
 
 /////////////////////////////////
@@ -142,6 +149,7 @@ let getSearchData = (cities, query) => {
 }
 
 let generateHtmlPage = (hrefList) => {
+  // TODO: make this response to objects
   return new Promise((resolve, reject) => {
     // console.log('generateHtmlPage from: ', hrefList)
     let output = ''

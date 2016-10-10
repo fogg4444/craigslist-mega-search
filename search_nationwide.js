@@ -5,20 +5,18 @@ var request = require('request');
 var Mustache = require('mustache');
 var fs = require('fs');
 
+var config = require('./config').config;
+
 console.log('Searching...')
 
+
 /////////////////////////////////
 /////////////////////////////////
-
-// drum kits
-// let searchQuery = 'search/sss?query=ludwig+vintage+kit&sort=rel&hasPic=1&min_price=1000&max_price=2000';
-
-// guitars
-let searchQuery = 'search/sss?query=rickenbacker+12+string&sort=rel&hasPic=1&min_price=1000&max_price=4000';
-
 // land cruiser
-// let searchQuery = 'search/cta?sort=rel&auto_make_model=land+cruiser&min_auto_year=1990&max_auto_year=1997&auto_transmission=1';
-let htmlOutputFile = './html_output.html'
+let searchQuery = config.searchQuery;
+let htmlOutputFile = config.htmlOutputFile
+
+let runScript = config.runScript;
 
 /////////////////////////////////
 /////////////////////////////////
@@ -80,7 +78,7 @@ let getSearchData = (cities, query) => {
   return new Promise((resolve, reject) => {
     let cityCount = cities.length
     let citiesComplete = 0;
-    let hrefList = []
+    let hrefList = {}
 
     var i = 0, howManyTimes = cityCount, requestDelay = 100;
     
@@ -116,10 +114,15 @@ let getSearchData = (cities, query) => {
                   
                   getThumbnailImage(completeLink)
                   .then((res) => {
-                    hrefList.push({
+                    
+                    hrefList[completeLink] = {
                       completeLink: completeLink,
                       image: res
-                    })
+                    }
+                    // hrefList.push({
+                    //   completeLink: completeLink,
+                    //   image: res
+                    // })
                   })
                   
                 }
@@ -151,11 +154,12 @@ let getSearchData = (cities, query) => {
 let generateHtmlPage = (hrefList) => {
   // TODO: make this response to objects
   return new Promise((resolve, reject) => {
-    // console.log('generateHtmlPage from: ', hrefList)
+    console.log('generateHtmlPage from: ', hrefList)
     let output = ''
 
     for( var i in hrefList) {
       let thisHref = hrefList[i]
+      console.log(thisHref)
       let view = {
         url: thisHref.completeLink,
         image: thisHref.image
@@ -171,22 +175,26 @@ let generateHtmlPage = (hrefList) => {
   })
 }
 
-getCraigsCityHtml()
-.then((res) => {
-  return parseCitiesHtmlToList(res)
-})
-.then(function(res) {
-  return getSearchData(res, searchQuery)
-  // let hrefArrayMock = /['http://www.brianfogg.com', 'http://www.google.com']
-  // return hrefArrayMock
-})
-.then((res) => {
-  console.log(res)
-  return generateHtmlPage(res)
-})
-.then((res) => {
-  console.log('================= Done! ====================')
-})
+if (runScript) {
+  getCraigsCityHtml()
+  .then((res) => {
+    return parseCitiesHtmlToList(res)
+  })
+  .then(function(res) {
+    return getSearchData(res, searchQuery)
+    // let hrefArrayMock = /['http://www.brianfogg.com', 'http://www.google.com']
+    // return hrefArrayMock
+  })
+  .then((res) => {
+    console.log(res)
+    return generateHtmlPage(res)
+  })
+  .then((res) => {
+    console.log('================= Done! ====================')
+  })  
+} else {
+  console.log('Run script set to false')
+}
 
 
 

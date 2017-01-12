@@ -35,6 +35,9 @@ let getCraigsCityHtml = () => {
 
 
 let parseCitiesHtmlToList = (html) => {
+  // this is now broken
+  // craigslist must have changed the site around
+  
   return new Promise((resolve, reject) => {
     let $ = cheerio.load(html)
     let pagecontainer = cheerio.load($('#pagecontainer').html())
@@ -84,7 +87,7 @@ let getSearchData = (cities, query) => {
     
     function f() {
       let thisCity = cities[i]
-      let formattedQuery = 'https:' + thisCity + query;
+      let formattedQuery = 'https:' + thisCity + 'search/sss?' + query;
       
       // code goes here...
       let options = {
@@ -178,6 +181,7 @@ let generateHtmlPage = (hrefList) => {
 if (runScript) {
   getCraigsCityHtml()
   .then((res) => {
+    console.log('-------', res)
     return parseCitiesHtmlToList(res)
   })
   .then(function(res) {

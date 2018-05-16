@@ -33,11 +33,12 @@ let parseCitiesHtmlToList = (html) => {
     let usCitiesColumn = cheerio.load( $('.colmask').html() )
     let usCitiesAlinks = usCitiesColumn('a')
     let hrefList = []
+    console.log('========== usCitiesAlinks', usCitiesAlinks, usCitiesAlinks.length)
     let cityToScanCount = usCitiesAlinks.length
     if(devMode) {
       cityToScanCount = cityScanLimit
     }
-    for(let i = 0; i < cityScanLimit; i++) {
+    for(let i = 0; i < cityToScanCount; i++) {
       let thisCity = usCitiesAlinks[i]
       if (thisCity.attribs) {
         if (thisCity.attribs.href) {
@@ -58,11 +59,11 @@ let makeSearchQuery = (thisCity, thisQuery) => {
     let formattedQuery = thisCity + 'search/' + searchLocation + '?' + thisQuery;
     console.log('Search query', formattedQuery);
     let options = {
-      timeout: 10000
+      timeout: 20000
     }
     request(formattedQuery, options, (error, response, body) => {
       if (error) {
-        console.log('Error: ' + thisCity + error + " - " + citiesComplete + ' / ' + cityCount);
+        console.log('Error: ' + thisCity + ' -- '+ error);
         resolve(null)
       } else if (!error && response.statusCode == 200) {
         // console.log('Valid response', response)
@@ -84,7 +85,7 @@ let makeSearchQuery = (thisCity, thisQuery) => {
         })
         resolve(formattedResultsArray)
       } else {
-        console.log('Unknown condition - ' + citiesComplete + ' / ' + cityCount)
+        console.log('Unknown condition - ')
         resolve(null)
       }
     })
@@ -111,9 +112,11 @@ let getSearchData = (cities, query) => {
       // flatten results in to one giant array
       let flattenedResults = []
       res.forEach((eachArray, i) => {
-        eachArray.forEach((elem, j) => {
-          flattenedResults.push(elem)
-        })
+        if(eachArray) {
+          eachArray.forEach((elem, j) => {
+            flattenedResults.push(elem)
+          })
+        }
       })
       resolve(flattenedResults)
     })

@@ -1,10 +1,10 @@
-let devMode = true;
+let devMode = false;
 let cityScanLimit = 2;
 // Keep this turned down while developing, don't want to trigger the CL blacklist!!
 
 
 let searchLocation = 'rnr'
-let searchQuery = 'query=love'
+let searchQuery = 'query='
 
 module.exports = {
   runScript: true,

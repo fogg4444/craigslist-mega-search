@@ -4,30 +4,21 @@ var cheerio = require('cheerio');
 var request = require('request');
 var Mustache = require('mustache');
 var fs = require('fs');
-
 var config = require('./config').config;
 
-console.log('Searching...')
-
-
-/////////////////////////////////
-/////////////////////////////////
-// land cruiser
-let searchQuery = config.searchQuery;
-let htmlOutputFile = config.htmlOutputFile
-
-let runScript = config.runScript;
+const { runScript, searchQuery, htmlOutputFile } = config;
 
 /////////////////////////////////
 /////////////////////////////////
 
 let getCraigsCityHtml = () => {
   return new Promise(function(resolve, reject) {
-    request('https://www.craigslist.org/about/sites#US', (error, response, body) => {
-      if (!error && response.statusCode == 200) {
+    request('https://www.craigslist.org/about/sites#US', (err, res, body) => {
+      console.log('resssss', err, res, body);
+      if (!err && res.statusCode == 200) {
         resolve(body)
       } else {
-        reject(error)
+        reject(err)
       }
     })
   })
@@ -81,11 +72,11 @@ let getSearchData = (cities, query) => {
     let hrefList = {}
 
     var i = 0, howManyTimes = cityCount, requestDelay = 100;
-    
+
     function f() {
       let thisCity = cities[i]
       let formattedQuery = 'https:' + thisCity + query;
-      
+
       // code goes here...
       let options = {
         timeout: 10000
@@ -109,12 +100,12 @@ let getSearchData = (cities, query) => {
                   href = href.slice(1)
                   let completeLink = 'https:' + thisCity + href
                   // console.log(completeLink)
-                  
+
                   console.log(' ============ Hit! ============')
-                  
+
                   getThumbnailImage(completeLink)
                   .then((res) => {
-                    
+
                     hrefList[completeLink] = {
                       completeLink: completeLink,
                       image: res
@@ -124,7 +115,7 @@ let getSearchData = (cities, query) => {
                     //   image: res
                     // })
                   })
-                  
+
                 }
               }
             }
@@ -170,33 +161,42 @@ let generateHtmlPage = (hrefList) => {
     }
 
     fs.writeFileSync(htmlOutputFile, output)
-    
+
     resolve('done')
   })
 }
 
-if (runScript) {
-  getCraigsCityHtml()
-  .then((res) => {
-    return parseCitiesHtmlToList(res)
-  })
-  .then(function(res) {
-    return getSearchData(res, searchQuery)
-    // let hrefArrayMock = /['http://www.brianfogg.com', 'http://www.google.com']
-    // return hrefArrayMock
-  })
-  .then((res) => {
-    console.log(res)
-    return generateHtmlPage(res)
-  })
-  .then((res) => {
-    console.log('================= Done! ====================')
-  })  
-} else {
-  console.log('Run script set to false')
+
+const executeScript = async () => {
+  try {
+    if(!runScript) throw new Error('Config does not allow script to run');
+
+    const cityRes = await getCraigsCityHtml();
+    console.log('city res', cityRes);
+
+    // .then((res) => {
+    //   return parseCitiesHtmlToList(res)
+    // })
+    // .then(function(res) {
+    //   return getSearchData(res, searchQuery)
+    //   // let hrefArrayMock = /['http://www.brianfogg.com', 'http://www.google.com']
+    //   // return hrefArrayMock
+    // })
+    // .then((res) => {
+    //   console.log(res)
+    //   return generateHtmlPage(res)
+    // })
+    // .then((res) => {
+    //   console.log('================= Done! ====================')
+    // });
+
+  } catch(e) {
+    console.log('ERROR:')
+    console.log(e);
+  }
 }
 
-
+executeScript();
 
 
 

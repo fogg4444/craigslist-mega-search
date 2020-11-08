@@ -5,7 +5,6 @@
   "main": "search_nationwide.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "devtool search_nationwide.js --watch"
   },
   "author": "",
   "license": "ISC",
